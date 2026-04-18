@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Todo App 🐳</title>
+  <style>
+    body { font-family: Arial; max-width: 600px; margin: 50px auto; padding: 20px; }
+    h1 { color: #0db7ed; }
+    input { padding: 10px; width: 70%; border: 1px solid #ccc; border-radius: 5px; }
+    button { padding: 10px 20px; background: #0db7ed; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    li { padding: 10px; margin: 5px 0; background: #f5f5f5; border-radius: 5px; display: flex; justify-content: space-between; }
+    .done { text-decoration: line-through; color: gray; }
+  </style>
+</head>
+<body>
+  <h1>🐳 Docker Todo App</h1>
+  <input id="taskInput" placeholder="enter some task..." />
+  <button onclick="addTodo()">Add</button>
+  <ul id="todoList"></ul>
+  <script>
+    async function loadTodos() {
+      const res = await fetch('/todos');
+      const todos = await res.json();
+      const list = document.getElementById('todoList');
+      list.innerHTML = todos.map(t => `
+        <li>
+          <span class="${t.done ? 'done' : ''}" onclick="toggleTodo(${t.id})">${t.task}</span>
+          <button onclick="deleteTodo(${t.id})">❌</button>
+        </li>
+      `).join('');
+    }
+    async function addTodo() {
+      const task = document.getElementById('taskInput').value;
+      if (!task) return;
+      await fetch('/todos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task })
+      });
+      document.getElementById('taskInput').value = '';
+      loadTodos();
+    }
+    async function toggleTodo(id) {
+      await fetch(`/todos/${id}`, { method: 'PUT' });
+      loadTodos();
+    }
+    async function deleteTodo(id) {
+      await fetch(`/todos/${id}`, { method: 'DELETE' });
+      loadTodos();
+    }
+    loadTodos();
+  </script>
+</body>
+</html>
